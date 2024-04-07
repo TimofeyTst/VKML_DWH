@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  # TODO: Make it works
+  hadoop:
+    container_name: cloudera
+    image: cloudera/quickstart:latest
+    
+    volumes:
+      - .:/usr/src/app/volume
+ 
+    privileged: true
+    ports:
+      - 0.0.0.0:8888:8888  # Hue
+      # Добавьте порты по желанию, например:
+      - 0.0.0.0:7180:7180  # Для Cloudera Manager
+      # - 0.0.0.0:80:80      # Для других приложений
+    
+    stdin_open: true  # Открыть stdin
+    tty: true 
+    command: ["sleep", "infinity"]
+
+
+networks:
+  default:
+    external: true
+    name: shared-vk-network
+
