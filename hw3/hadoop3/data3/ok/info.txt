@@ -1,0 +1,8 @@
+Описание полей:
+id - id пользователя
+create_date - дата создания профиля
+birth_date - дата рождения (unixtime / (24*60*60))
+gender - пол (2 - женщина, 1 - мужчина)
+id_country - id страны
+id_location - id местоположения
+login_region - номер региона
