@@ -29,6 +29,15 @@ products_for_stat_path = "/user/{}/data/data3/rosstat/products_for_stat.csv".for
 output_path = "/user/{}/task4/luigi".format(user)
 
 
+class CSVLoadSensor(luigi.contrib.hdfs.HdfsSensor):
+    path = luigi.Parameter()
+
+    def requires(self):
+        return self.path
+
+    def output(self):
+        return luigi.contrib.hdfs.HdfsTarget(self.path)
+
 class ReadCSVSparkTask(luigi.Task):
     city_path = luigi.Parameter()
     product_path = luigi.Parameter()
@@ -240,6 +249,21 @@ class StatisticSparkTask(luigi.Task):
             .withColumn("women_share", sf.round(sf.col("women_cnt") / sf.col('user_cnt'), 2))
         )
 
+        # Добавим city name
+        ok_dem_df_with_cite_name = (
+            ok_dem_df
+            .join(cities_df, sf.col("city_id") == sf.col("rs_city_id"))
+            .select(
+                cities_df.city.alias("city_name"),
+                ok_dem_df.user_cnt,
+                ok_dem_df.age_avg,
+                ok_dem_df.men_cnt,
+                ok_dem_df.women_cnt,
+                ok_dem_df.men_share,
+                ok_dem_df.women_share
+            )
+        )
+
         ## Города, с фильтрацией условий для пользователей
         ok_dem_cities_stat_df = (
             ok_dem_df
@@ -334,7 +358,8 @@ class StatisticSparkTask(luigi.Task):
 
         price_stat_df.write.mode("overwrite").parquet(f"{output_path}/tmp/products_for_stat.parquet")
         citites_for_stat_df.write.mode("overwrite").parquet(f"{output_path}/citites_for_stat_df.parquet")
-        ok_dem_df.write.mode("overwrite").parquet(f"{output_path}/ok_dem.parquet")
+        ok_dem_df.write.mode("overwrite").parquet(f"{output_path}/tmp/ok_dem.parquet")
+        ok_dem_df_with_cite_name.write.mode("overwrite").parquet(f"{output_path}/ok_dem.parquet")
         all_filtered_cities.write.mode("overwrite").parquet(f"{output_path}/tmp/all_filtered_cities.parquet")
         result_df.write.mode("overwrite").parquet(f"{output_path}/price_stat.parquet")
 
